@@ -33,13 +33,13 @@ class City:
         return dist
 
 if __name__ == '__main__':
-    # 20 random city locations? I think this is correct
+    # 20 random city locations
     cities = []
     for i in range (20):
        # cities.append(City(numpy.random.uniform(), numpy.random.uniform())) # apparently the depreciated way?
        cities.append(City(rng.random(), rng.random()))
     
-    # plot the cities and paths
+    # for plotting cities and paths
     fig = plt.figure(figsize=(10, 5))
     axis1 = fig.add_subplot(121)
     axis2 = fig.add_subplot(121)
@@ -58,13 +58,16 @@ factor = 0.99
 T_init = T
 
 print("Calculating...")
-for i in range(1000):   # number of iterations
+for i in range(1000):   # number of iterations, terminating condition
     # Debug:
     # print(i, "const", cost0)
 
+    # cooling schedule
     T = T * factor
     for j in range(100):
         # exchange the values and get a new neighbor
+        # randomly picks a neighbor, not ideal
+        # want them to be close, use Minimum Spanning Tree?
         r1, r2 = numpy.random.randint(0, len(cities), size = 2)
 
         # swap
