@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt # plot results
 
 # same "randoms" will always be generated because of the seed 
 # FIXME: change later
-rng = numpy.random.default_rng(seed=42)
+rng = numpy.random.default_rng(seed=420)
 print("Seed: ", rng)
 
 class City:
@@ -52,6 +52,7 @@ if __name__ == '__main__':
     
 # Simulated Annealing
 cost0 = City.getTotalDistance(cities)
+print("Starting distance: ", cost0)
 # can change these values
 T = 30  
 factor = 0.99
@@ -89,6 +90,7 @@ for i in range(1000):   # number of iterations, terminating condition
                 cities[r1] = cities[r2]
                 cities[r2] = temp
 # plot results
+print("Final Distance: ", cost0)
 
 for a, b in zip(cities[:-1], cities[1:]):
     axis2.plot([a.x, b.x], [a.y, b.y], 'b')
