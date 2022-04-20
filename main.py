@@ -81,6 +81,7 @@ class Cities:
                 continue
             else:
                 self.cities.append([_gx, _gy])
+        self.cities.append([self.cities[0][0], self.cities[0][1]])
         return self.cities
 
 
@@ -97,31 +98,56 @@ class SATAV:
         """
         tau = self.generate_threshold_vector(rounds)
         s = self.cities.copy()
+        s_new = s.copy()
+        best = route_cost(s)
         for rnd in range(rounds):
-            # Neighbor function is what makes nice solutions
-            # this is the algorithm talking point of what makes this 00:14:40
-            s_new = neighbor_swap(s)  # neighbor(s) #For every step in every round calculate a neighbor candidate
-            # solution cost
-            _cost = route_cost(s_new) - route_cost(s)
-            # print("Cost", _cost)
-            if _cost < tau[rnd]:  # tau_round
-                s = s_new.copy()
+            for t in tau:
+                # Neighbor function is what makes nice solutions
+                # this is the algorithm talking point of what makes this 00:14:40
+                s_new = neighbor_swap(s_new)  # neighbor(s) #For every step in every round calculate a neighbor candidate
+                # solution cost
+                _cost = route_cost(s_new) - route_cost(s)
+                # print("Cost", _cost)
+
+                if _cost > best:
+                    continue
+
+                if _cost < best and _cost < t:
+                    s = s_new.copy()
+                    best = _cost
+
         # print(max(_route_diff), min(_route_diff))
         return s
 
+    # def generate_threshold_vector(self, rounds):
+    #     _threshold_vector = []
+    #     _city_list = self.cities.copy()
+    #     s_new = self.cities.copy()
+    #     for rnd in range(rounds):
+    #         # Run through the rounds and capture all route costs with random swaps
+    #         # For every swap calculate a threshold
+    #         s_new = neighbor_swap(s_new)
+    #         if route_cost(s_new) < route_cost(_city_list):
+    #             _city_list = s_new.copy()
+    #             _threshold_vector.append(route_cost(s_new) - route_cost(_city_list))
+    #
+    #     # Reverse sort list to apply large change first
+    #     _threshold_vector.sort(reverse=True)
+    #     print("Length of vector:", len(_threshold_vector))
+    #     return _threshold_vector
+
     def generate_threshold_vector(self, rounds):
         _threshold_vector = []
-        _original_cost = route_cost(self.cities)
-        _original_city_list = self.cities.copy()
-        for rnd in range(rounds):
-            # Run through the rounds and capture all route costs with random swaps
-            # For every swap calculate a threshold
-            s_new = neighbor_swap(_original_city_list)
-            _threshold_vector.append(route_cost(s_new) - _original_cost)
-
-        # Reverse sort list to apply large change first
-        _threshold_vector.sort(reverse=True)
-        # print(_threshold_vector)
+        init_temp =1
+        final_temp = route_cost(self.cities)
+        t = init_temp
+        for k in range(2, rounds):
+            b = (init_temp - final_temp) / ((k - 1) * init_temp * final_temp)
+            t = t / (1 + b * t)
+            _threshold_vector.append(t)
+        print("Threshold vector:", len(_threshold_vector))
+        print("Iitial", init_temp)
+        print("First iter", _threshold_vector[0])
         return _threshold_vector
 
 
@@ -145,7 +171,7 @@ if __name__ == '__main__':
     print(_x, _y)
 
     sa_variant = SATAV(city_list)  # Simulated annealing threshold accepting variant
-    new_city_list = sa_variant.simulate(15_000)
+    new_city_list = sa_variant.simulate(2_000)
 
     fig2 = plt.figure(figsize=(10, 5))
 
