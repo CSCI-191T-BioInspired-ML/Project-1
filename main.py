@@ -5,12 +5,13 @@
 # Basic Simulated Annealing
 
 import numpy
-import matplotlib.pyplot as plt # plot results
+import matplotlib.pyplot as plt  # plot results
 
 # same "randoms" will always be generated because of the seed 
 # FIXME: change later
 rng = numpy.random.default_rng(seed=420)
 print("Seed: ", rng)
+
 
 class City:
     def __init__(self, x, y):
@@ -32,13 +33,14 @@ class City:
         dist += City.singleDistance(cities[0], cities[-1])
         return dist
 
+
 if __name__ == '__main__':
     # 20 random city locations
     cities = []
-    for i in range (20):
-       # cities.append(City(numpy.random.uniform(), numpy.random.uniform())) # apparently the depreciated way?
-       cities.append(City(rng.random(), rng.random()))
-    
+    for i in range(10):
+        # cities.append(City(numpy.random.uniform(), numpy.random.uniform())) # apparently the depreciated way?
+        cities.append(City(rng.random(), rng.random()))
+
     # for plotting cities and paths
     fig = plt.figure(figsize=(10, 5))
     axis1 = fig.add_subplot(121)
@@ -49,17 +51,17 @@ if __name__ == '__main__':
     axis1.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
     for curr in cities:
         axis1.plot(curr.x, curr.y, 'ro')
-    
+
 # Simulated Annealing
 cost0 = City.getTotalDistance(cities)
 print("Starting distance: ", cost0)
 # can change these values
-T = 30  
+T = 30
 factor = 0.99
 T_init = T
 
 print("Calculating...")
-for i in range(1000):   # number of iterations, terminating condition
+for i in range(1000):  # number of iterations, terminating condition
     # Debug:
     # print(i, "const", cost0)
 
@@ -69,7 +71,7 @@ for i in range(1000):   # number of iterations, terminating condition
         # exchange the values and get a new neighbor
         # randomly picks a neighbor, not ideal
         # want them to be close, use Minimum Spanning Tree?
-        r1, r2 = numpy.random.randint(0, len(cities), size = 2)
+        r1, r2 = numpy.random.randint(0, len(cities), size=2)
 
         # swap
         temp = cities[r1]
@@ -80,15 +82,18 @@ for i in range(1000):   # number of iterations, terminating condition
         cost1 = City.getTotalDistance(cities)
 
         if cost1 < cost0:
+            # Only select the best move (hill climbing)
             cost0 = cost1
         else:
+            # Random restart when there are no more good moves
             x = numpy.random.uniform()
-            if x < numpy.exp((cost0 - cost1)/T):
+            if x < numpy.exp((cost0 - cost1) / T):
                 cost0 = cost1
             else:
                 temp = cities[r1]
                 cities[r1] = cities[r2]
                 cities[r2] = temp
+
 # plot results
 print("Final Distance: ", cost0)
 
