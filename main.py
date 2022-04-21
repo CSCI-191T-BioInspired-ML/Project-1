@@ -104,8 +104,7 @@ class SATAV:
             for t in tau:
                 # Neighbor function is what makes nice solutions
                 # this is the algorithm talking point of what makes this 00:14:40
-                s_new = neighbor_swap(s_new)  # neighbor(s) #For every step in every round calculate a neighbor candidate
-                # solution cost
+                s_new = neighbor_swap(s_new)  # neighbor(s) #For every temperature in every round calculate a new state
                 _cost = route_cost(s_new) - route_cost(s)
                 # print("Cost", _cost)
 
@@ -138,7 +137,7 @@ class SATAV:
 
     def generate_threshold_vector(self, rounds):
         _threshold_vector = []
-        init_temp =1
+        init_temp = 1
         final_temp = route_cost(self.cities)
         t = init_temp
         for k in range(2, rounds):
