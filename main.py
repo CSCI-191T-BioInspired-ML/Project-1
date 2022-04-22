@@ -20,15 +20,13 @@
 # IX.   Conclusions
 
 import math
-import copy
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt  # plot results
 
 
 def random_coordinates():
-    # _coordinates = np.random.randint(low=0, high=20, size=2)
-    # return [_coordinates[0], _coordinates[1]]
     return [np.random.random(), np.random.random()]
 
 
@@ -43,6 +41,11 @@ def route_cost(route_list):
         x2, y2 = route_list[i + 1]
         _sum = (x2 - x1) ** 2 + (y2 - y1) ** 2
         _distance_sum += math.sqrt(_sum)
+    """Last node to the root node"""
+    x1, y1 = route_list[0]
+    x2, y2 = route_list[len(route_list) - 1]
+    _sum = (x2 - x1) ** 2 + (y2 - y1) ** 2
+    _distance_sum += math.sqrt(_sum)
     return _distance_sum
 
 
@@ -55,13 +58,14 @@ def neighbor_swap(cities):
 
 
 class Cities:
-    """City Generation testing"""
+    """City list generator"""
 
     def __init__(self, quantity):
         self.cities = []
         self.total_cities = quantity
 
     def generate(self):
+        self.cities.clear()
         while len(self.cities) < self.total_cities:
             _coordinates = random_coordinates()
             _gx, _gy = _coordinates[0], _coordinates[1]
@@ -73,42 +77,39 @@ class Cities:
         return self.cities
 
 
-class SATAV:
+class SimulatedAnnealingTA:
     """Simulated Annealing Threshold Accepting Variant"""
 
     def __init__(self, cities):
         self.cities = cities
+        self.best_route = cities
 
     def simulate(self, rounds, steps):
         """
-        The threshold sequence is analogous to the cooling schedule
-        Threshold is analogous to temperature
+        The threshold sequence is analogous to the cooling schedule (temperature)
         """
         tau = self.generate_threshold_vector_quad(steps)  # length of threshold vector
         s_old = self.cities.copy()
-        s_new = s_old.copy()
-        best = s_old.copy()
-        int12 = 0
-        for rnd in range(rounds):
+        # s_new = s_old.copy()
+        for _ in range(rounds):
+            s_new = self.best_route.copy()
             for t in tau:
                 s_new = neighbor_swap(s_new)  # swap neighbors for a new state
                 _cost = route_cost(s_new) - route_cost(s_old)
                 if _cost < t:
-                    int12 += 1
                     s_old = s_new.copy()
-                    if route_cost(s_old) < route_cost(best):
-                        best = s_new.copy()
-        print("Iterations,", int12)
-        return best
+                    if route_cost(s_old) < route_cost(self.best_route):
+                        self.best_route = s_new.copy()
+        return self.best_route
 
     def generate_threshold_vector_exp(self, rounds):
         _threshold_vector = []
         t0 = 100
         k = 0.8
         for r in range(rounds):
-            t = t0*k**r
+            t = t0 * k ** r
             _threshold_vector.append(t)
-        print(_threshold_vector)
+        # print("TA vector list (Exponential)", _threshold_vector)
         return _threshold_vector
 
     def generate_threshold_vector_quad(self, rounds):
@@ -116,9 +117,9 @@ class SATAV:
         t0 = 100
         k = 0.2
         for r in range(rounds):
-            t = t0/(1+k*(r**2))
+            t = t0 / (1 + k * (r ** 2))
             _threshold_vector.append(t)
-        print("TA vector list", _threshold_vector)
+        # print("TA vector list (Quadratic multiplicative)", _threshold_vector)
         return _threshold_vector
 
 
@@ -143,8 +144,8 @@ if __name__ == '__main__':
     plt.show()
     print(_x, _y)
 
-    sa_variant = SATAV(city_list)  # Simulated annealing threshold accepting variant
-    new_city_list = sa_variant.simulate(1000, 1000)  # rounds, threshold vector length
+    sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
+    new_city_list = sata.simulate(250, 100)  # rounds, threshold length
 
     fig2 = plt.figure(figsize=(10, 5))
 
@@ -161,3 +162,31 @@ if __name__ == '__main__':
     print(_x, _y)
 
     print("Final route cost:", (route_cost(new_city_list)))
+    print("\t\tDIFF", (route_cost(city_list) - route_cost(new_city_list)))
+
+    # Testing
+    # city = Cities(100)
+    # city_list = city.generate()
+    # for i in range(1, 11):
+    #     start = time.time()
+    #     print("Testing", (100 * i), "rounds with 100 threshold vector length")
+    #     print("\tStarting route cost:", route_cost(city_list))
+    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
+    #     new_city_list = sata.simulate(100 * i, 100)  # rounds, threshold length
+    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
+    #     print("\t\tDIFF Rounds", (route_cost(city_list) - route_cost(new_city_list)))
+    #     start = time.time()
+    #     print("Testing 100 rounds with", (100 * i), "threshold vector length")
+    #     print("\tStarting route cost:", route_cost(city_list))
+    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
+    #     new_city_list = sata.simulate(100, 100 * i)  # rounds, threshold length
+    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
+    #     print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
+    #     start = time.time()
+    #     print("Testing", (100//2 * i), "rounds with", (100//2 * i), "threshold vector length")
+    #     print("\tStarting route cost:", route_cost(city_list))
+    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
+    #     new_city_list = sata.simulate(100//2 * i, 100//2 * i)  # rounds, threshold length
+    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
+    #     print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
+    #     print("-------------------------------------")
