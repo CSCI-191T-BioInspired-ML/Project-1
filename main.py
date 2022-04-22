@@ -1,11 +1,10 @@
 # CSCI 191T
 # Spring 2022
-# Traveling Salesperson with Simulated Annealing
-#  
-# Basic Simulated Annealing
+# Traveling Salesperson with Simulated Annealing: Hill climb variant
+import math
 
-import numpy
 import matplotlib.pyplot as plt  # plot results
+import numpy
 
 # same "randoms" will always be generated because of the seed 
 # FIXME: change later
@@ -13,32 +12,40 @@ rng = numpy.random.default_rng(seed=420)
 print("Seed: ", rng)
 
 
+def prob(curr_eval, next_eval, tmp):
+    if next_eval < curr_eval:
+        return 1.0
+    else:
+        if tmp < 1e-64:  # failsafe for low temp
+            return 0.0
+        return math.exp(-abs(next_eval - curr_eval) / tmp)
+
+
 class City:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self, _x, _y):
+        self.x = _x
+        self.y = _y
 
     # calculate distance between a and b
     @staticmethod
-    def singleDistance(a, b):
-        return numpy.sqrt(numpy.abs(a.x - b.x) + numpy.abs(a.y - b.y))
+    def single_dist(_a, _b):
+        return numpy.sqrt(numpy.abs(_a.x - _b.x) + numpy.abs(_a.y - _b.y))
 
     # https://stackoverflow.com/questions/509211/understanding-slicing
     @staticmethod
-    def getTotalDistance(cities):
+    def get_total_dist(city_list):
         dist = 0
         # create tuples, everything except last item and last item
-        for a, b in zip(cities[:-1], cities[1:]):
-            dist += City.singleDistance(a, b)
-        dist += City.singleDistance(cities[0], cities[-1])
+        for _a, _b in zip(city_list[:-1], city_list[1:]):
+            dist += City.single_dist(_a, _b)
+        dist += City.single_dist(city_list[0], city_list[-1])
         return dist
 
 
 if __name__ == '__main__':
-    # 20 random city locations
+    # 100 random city locations
     cities = []
-    for i in range(10):
-        # cities.append(City(numpy.random.uniform(), numpy.random.uniform())) # apparently the depreciated way?
+    for i in range(100):
         cities.append(City(rng.random(), rng.random()))
 
     # for plotting cities and paths
@@ -53,20 +60,19 @@ if __name__ == '__main__':
         axis1.plot(curr.x, curr.y, 'ro')
 
 # Simulated Annealing
-cost0 = City.getTotalDistance(cities)
+cost0 = City.get_total_dist(cities)
 print("Starting distance: ", cost0)
 # can change these values
-T = 30
-factor = 0.99
-T_init = T
-
+T = 100
+k = 0.8
+t0 = T
 print("Calculating...")
+restart = 0
+best = cities.copy()
 for i in range(1000):  # number of iterations, terminating condition
-    # Debug:
-    # print(i, "const", cost0)
 
-    # cooling schedule
-    T = T * factor
+    # Exponential cooling schedule
+    T = t0 * (k ** i)
     for j in range(100):
         # exchange the values and get a new neighbor
         # randomly picks a neighbor, not ideal
@@ -79,23 +85,23 @@ for i in range(1000):  # number of iterations, terminating condition
         cities[r2] = temp
 
         # new cost value
-        cost1 = City.getTotalDistance(cities)
+        cost1 = City.get_total_dist(cities)
 
         if cost1 < cost0:
             # Only select the best move (hill climbing)
             cost0 = cost1
+            best = cities.copy()
         else:
-            # Random restart when there are no more good moves
-            x = numpy.random.uniform()
-            if x < numpy.exp((cost0 - cost1) / T):
-                cost0 = cost1
-            else:
-                temp = cities[r1]
-                cities[r1] = cities[r2]
-                cities[r2] = temp
+            # Maybe random restart
+            p = prob(cost0, cost1, T)
+            r = rng.random()
+            if r < p:
+                restart += 1
+                cities = best.copy()
 
 # plot results
 print("Final Distance: ", cost0)
+print("Restarts: ", restart)
 
 for a, b in zip(cities[:-1], cities[1:]):
     axis2.plot([a.x, b.x], [a.y, b.y], 'b')
