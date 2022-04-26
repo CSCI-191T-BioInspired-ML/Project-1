@@ -109,7 +109,7 @@ class SimulatedAnnealingTA:
         for r in range(rounds):
             t = t0 * k ** r
             _threshold_vector.append(t)
-        # print("TA vector list (Exponential)", _threshold_vector)
+        print("TA vector list (Exponential)", _threshold_vector)
         return _threshold_vector
 
     def generate_threshold_vector_quad(self, rounds):
@@ -119,7 +119,7 @@ class SimulatedAnnealingTA:
         for r in range(rounds):
             t = t0 / (1 + k * (r ** 2))
             _threshold_vector.append(t)
-        # print("TA vector list (Quadratic multiplicative)", _threshold_vector)
+        print("TA vector list (Quadratic multiplicative)", _threshold_vector)
         return _threshold_vector
 
 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     print(_x, _y)
 
     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
-    new_city_list = sata.simulate(250, 100)  # rounds, threshold length
+    new_city_list = sata.simulate(2000, 400)  # rounds, threshold length
 
     fig2 = plt.figure(figsize=(10, 5))
 
@@ -165,28 +165,28 @@ if __name__ == '__main__':
     print("\t\tDIFF", (route_cost(city_list) - route_cost(new_city_list)))
 
     # Testing
-    # city = Cities(100)
-    # city_list = city.generate()
-    # for i in range(1, 11):
-    #     start = time.time()
-    #     print("Testing", (100 * i), "rounds with 100 threshold vector length")
-    #     print("\tStarting route cost:", route_cost(city_list))
-    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
-    #     new_city_list = sata.simulate(100 * i, 100)  # rounds, threshold length
-    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
-    #     print("\t\tDIFF Rounds", (route_cost(city_list) - route_cost(new_city_list)))
-    #     start = time.time()
-    #     print("Testing 100 rounds with", (100 * i), "threshold vector length")
-    #     print("\tStarting route cost:", route_cost(city_list))
-    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
-    #     new_city_list = sata.simulate(100, 100 * i)  # rounds, threshold length
-    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
-    #     print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
-    #     start = time.time()
-    #     print("Testing", (100//2 * i), "rounds with", (100//2 * i), "threshold vector length")
-    #     print("\tStarting route cost:", route_cost(city_list))
-    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
-    #     new_city_list = sata.simulate(100//2 * i, 100//2 * i)  # rounds, threshold length
-    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
-    #     print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
-    #     print("-------------------------------------")
+    city = Cities(100)
+    city_list = city.generate()
+    for i in range(1, 11):
+        start = time.time()
+        print("Testing", (100 * i), "rounds with 100 threshold vector length")
+        print("\tStarting route cost:", route_cost(city_list))
+        sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
+        new_city_list = sata.simulate(100 * i, 100)  # rounds, threshold length
+        print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
+        print("\t\tDIFF Rounds", (route_cost(city_list) - route_cost(new_city_list)))
+        start = time.time()
+        print("Testing 100 rounds with", (100 * i), "threshold vector length")
+        print("\tStarting route cost:", route_cost(city_list))
+        sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
+        new_city_list = sata.simulate(100, 100 * i)  # rounds, threshold length
+        print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
+        print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
+        start = time.time()
+        print("Testing", (100//2 * i), "rounds with", (100//2 * i), "threshold vector length")
+        print("\tStarting route cost:", route_cost(city_list))
+        sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
+        new_city_list = sata.simulate(100//2 * i, 100//2 * i)  # rounds, threshold length
+        print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
+        print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
+        print("-------------------------------------")
