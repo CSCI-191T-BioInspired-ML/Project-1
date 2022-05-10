@@ -1,24 +1,13 @@
 # CSCI 191T
 # Spring 2022
-# Traveling Salesperson with Simulated Annealing: Hill climb variant
+# Traveling Salesman hill climbing variant
 import math
 
 import matplotlib.pyplot as plt  # plot results
 import numpy
+from numpy.random import default_rng
 
-# same "randoms" will always be generated because of the seed 
-# FIXME: change later
-rng = numpy.random.default_rng(seed=420)
-print("Seed: ", rng)
-
-
-def prob(curr_eval, next_eval, tmp):
-    if next_eval < curr_eval:
-        return 1.0
-    else:
-        if tmp < 1e-64:  # failsafe for low temp
-            return 0.0
-        return math.exp(-abs(next_eval - curr_eval) / tmp)
+rng = default_rng()
 
 
 class City:
@@ -62,21 +51,14 @@ if __name__ == '__main__':
 # Simulated Annealing
 cost0 = City.get_total_dist(cities)
 print("Starting distance: ", cost0)
-# can change these values
-T = 100
-k = 0.8
-t0 = T
+
 print("Calculating...")
 restart = 0
 best = cities.copy()
-for i in range(1000):  # number of iterations, terminating condition
-
-    # Exponential cooling schedule
-    T = t0 * (k ** i)
+for i in range(1000):
     for j in range(100):
         # exchange the values and get a new neighbor
         # randomly picks a neighbor, not ideal
-        # want them to be close, use Minimum Spanning Tree?
         r1, r2 = numpy.random.randint(0, len(cities), size=2)
 
         # swap
@@ -88,20 +70,16 @@ for i in range(1000):  # number of iterations, terminating condition
         cost1 = City.get_total_dist(cities)
 
         if cost1 < cost0:
-            # Only select the best move (hill climbing)
+            # only select the best move (hill climbing)
             cost0 = cost1
             best = cities.copy()
-        else:
-            # Maybe random restart
-            p = prob(cost0, cost1, T)
-            r = rng.random()
-            if r < p:
-                restart += 1
-                cities = best.copy()
+        elif cost1 - cost0 > 1:  # revert to best configuration
+            restart += 1
+            cities = best.copy()
 
 # plot results
-print("Final Distance: ", cost0)
-print("Restarts: ", restart)
+print("Final Distance:", cost0)
+print("Reloaded best city configuration", restart, "times")
 
 for a, b in zip(cities[:-1], cities[1:]):
     axis2.plot([a.x, b.x], [a.y, b.y], 'b')
