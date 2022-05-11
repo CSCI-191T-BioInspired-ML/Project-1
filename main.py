@@ -6,9 +6,10 @@ import math
 import matplotlib.pyplot as plt  # plot results
 import numpy
 from numpy.random import default_rng
+import time
 
-rng = default_rng()
-
+timeout_seconds = 30
+rng = default_rng(seed=420)
 
 class City:
     def __init__(self, _x, _y):
@@ -38,53 +39,53 @@ if __name__ == '__main__':
         cities.append(City(rng.random(), rng.random()))
 
     # for plotting cities and paths
-    fig = plt.figure(figsize=(10, 5))
-    axis1 = fig.add_subplot(121)
-    axis2 = fig.add_subplot(121)
+    # fig = plt.figure(figsize=(10, 5))
+    # axis1 = fig.add_subplot(121)
+    # axis2 = fig.add_subplot(121)
 
-    for a, b in zip(cities[:-1], cities[1:]):
-        axis1.plot([a.x, b.x], [a.y, b.y], 'b')
-    axis1.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
-    for curr in cities:
-        axis1.plot(curr.x, curr.y, 'ro')
+    # for a, b in zip(cities[:-1], cities[1:]):
+    #    axis1.plot([a.x, b.x], [a.y, b.y], 'b')
+    # axis1.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
+    # for curr in cities:
+    #    axis1.plot(curr.x, curr.y, 'ro')
 
 # Simulated Annealing
 cost0 = City.get_total_dist(cities)
 print("Starting distance: ", cost0)
 
 print("Calculating...")
+timeout = time.time() + timeout_seconds
 restart = 0
 best = cities.copy()
-for i in range(1000):
-    for j in range(100):
-        # exchange the values and get a new neighbor
-        # randomly picks a neighbor, not ideal
-        r1, r2 = numpy.random.randint(0, len(cities), size=2)
+while(time.time() < timeout):
+    # exchange the values and get a new neighbor
+    # randomly picks a neighbor, not ideal
+    r1, r2 = numpy.random.randint(0, len(cities), size=2)
 
-        # swap
-        temp = cities[r1]
-        cities[r1] = cities[r2]
-        cities[r2] = temp
+    # swap
+    temp = cities[r1]
+    cities[r1] = cities[r2]
+    cities[r2] = temp
 
-        # new cost value
-        cost1 = City.get_total_dist(cities)
+    # new cost value
+    cost1 = City.get_total_dist(cities)
 
-        if cost1 < cost0:
-            # only select the best move (hill climbing)
-            cost0 = cost1
-            best = cities.copy()
-        elif cost1 - cost0 > 1:  # revert to best configuration
-            restart += 1
-            cities = best.copy()
+    if cost1 < cost0:
+        # only select the best move (hill climbing)
+        cost0 = cost1
+        best = cities.copy()
+    elif cost1 - cost0 > 1:  # revert to best configuration
+        restart += 1
+        cities = best.copy()
 
 # plot results
 print("Final Distance:", cost0)
 print("Reloaded best city configuration", restart, "times")
 
-for a, b in zip(cities[:-1], cities[1:]):
-    axis2.plot([a.x, b.x], [a.y, b.y], 'b')
-axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
-for curr in cities:
-    axis2.plot(curr.x, curr.y, 'ro')
+# for a, b in zip(cities[:-1], cities[1:]):
+#    axis2.plot([a.x, b.x], [a.y, b.y], 'b')
+# axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
+# for curr in cities:
+#    axis2.plot(curr.x, curr.y, 'ro')
 
-plt.show()
+# plt.show()
