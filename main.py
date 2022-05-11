@@ -5,11 +5,15 @@
 # Basic Simulated Annealing
 
 import numpy
+from numpy.random import default_rng
 import matplotlib.pyplot as plt # plot results
+import time # for algorithms comparisons
 
 # same "randoms" will always be generated because of the seed 
-# FIXME: change later
 rng = numpy.random.default_rng(seed=420)
+
+# change for algorithm time comparisons 
+timeout_seconds = 30
 print("Seed: ", rng)
 
 class City:
@@ -33,22 +37,23 @@ class City:
         return dist
 
 if __name__ == '__main__':
-    # 20 random city locations
+    # 100 random city locations
     cities = []
-    for i in range (20):
+    for i in range (100):
        # cities.append(City(numpy.random.uniform(), numpy.random.uniform())) # apparently the depreciated way?
        cities.append(City(rng.random(), rng.random()))
     
-    # for plotting cities and paths
-    fig = plt.figure(figsize=(10, 5))
-    axis1 = fig.add_subplot(121)
-    axis2 = fig.add_subplot(121)
+    # plotting removed for time comparisons
 
-    for a, b in zip(cities[:-1], cities[1:]):
-        axis1.plot([a.x, b.x], [a.y, b.y], 'b')
-    axis1.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
-    for curr in cities:
-        axis1.plot(curr.x, curr.y, 'ro')
+    # fig = plt.figure(figsize=(10, 5))
+    # axis1 = fig.add_subplot(121)
+    # axis2 = fig.add_subplot(121)
+
+    # for a, b in zip(cities[:-1], cities[1:]):
+    #    axis1.plot([a.x, b.x], [a.y, b.y], 'b')
+    # axis1.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
+    # for curr in cities:
+    #    axis1.plot(curr.x, curr.y, 'ro')
     
 # Simulated Annealing
 cost0 = City.getTotalDistance(cities)
@@ -59,9 +64,10 @@ factor = 0.99
 T_init = T
 
 print("Calculating...")
-for i in range(1000):   # number of iterations, terminating condition
-    # Debug:
-    # print(i, "const", cost0)
+
+# for comparisons, only times after citt locations have been set
+timeout = time.time() + timeout_seconds      # how long the algorithm is allowed to run (30 sec)
+while(time.time() < timeout):                # terminating condition
 
     # cooling schedule
     T = T * factor
@@ -92,10 +98,10 @@ for i in range(1000):   # number of iterations, terminating condition
 # plot results
 print("Final Distance: ", cost0)
 
-for a, b in zip(cities[:-1], cities[1:]):
-    axis2.plot([a.x, b.x], [a.y, b.y], 'b')
-axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
-for curr in cities:
-    axis2.plot(curr.x, curr.y, 'ro')
+# for a, b in zip(cities[:-1], cities[1:]):
+#    axis2.plot([a.x, b.x], [a.y, b.y], 'b')
+# axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
+# for curr in cities:
+#    axis2.plot(curr.x, curr.y, 'ro')
 
-plt.show()
+# plt.show()
