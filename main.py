@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt  # plot results
 from numpy.random import default_rng
 
 rng = default_rng(seed=420)
-benchmark_seconds = 90
+benchmark_seconds = 20
 
 
 def random_coordinates():
@@ -106,60 +106,75 @@ class SimulatedAnnealingTA:
             tau = self.generate_threshold_vector_quad(steps)
         s_old = self.cities.copy()
         loops_counter = 0
+        update_counter = 0
         s_old_cost = get_total_dist(s_old)
         s_best_cost = get_total_dist(self.best_route)
+
         if timeout:
             print("Running TA for", self.get_bench_time_seconds(), "seconds...")
-
             while time.time_ns() < self.timeout_ns:
                 s_new = self.best_route.copy()
+                improvement = 0
                 for t in tau:
-                    s_new = neighbor_swap(s_new)  # swap neighbors for a new state
-                    s_new_cost = get_total_dist(s_new)  # cost of new route
-                    _cost = s_new_cost - s_old_cost
+                    """Check for improvement before visiting the next threshold"""
+                    improvement += 1
+                    while improvement > 0:
+                        s_new = neighbor_swap(s_new)  # swap neighbors for a new state
+                        s_new_cost = get_total_dist(s_new)  # cost of new route
+                        _cost = s_new_cost - s_old_cost
 
-                    if s_new_cost < s_old_cost:  # if the new route is better than the old route take the new route
-                        s_old = s_new.copy()
-                        s_old_cost = get_total_dist(s_old)
-                        if s_old_cost < s_best_cost:  # update the best route
-                            self.best_route = s_new.copy()  # update best state of the traveling salesman
-                            s_best_cost = get_total_dist(self.best_route)
-                    else:
-                        x = np.random.uniform()
-                        if x < _cost / t:  # threshold vector temperature comparison
+                        """Test the threshold temperature"""
+                        if _cost < t:
+                            # accept the threshold
                             s_old = s_new.copy()
                             s_old_cost = get_total_dist(s_old)
-                        else:
-                            s_new = neighbor_swap(s_new)
+
+                            """Update best solution"""
+                            if s_old_cost < s_best_cost:  # update the best route
+                                update_counter += 1
+                                self.best_route = s_old.copy()  # update best state of the traveling salesman
+                                s_best_cost = get_total_dist(self.best_route)
+                                improvement += 3  # making improvement with this temperature go for more rounds
+
+                        if time.time_ns() > self.timeout_ns:  # exit while loop
+                            finish_time = self.get_runtime_ms()
+                            self.update_time_spent_ms(finish_time)
+                            # print("Stopping benchmark it we are", finish_time, "ms overdue")
+                            break
+                        improvement -= 1  # decrement improvement
+                        loops_counter += 1
                     if time.time_ns() > self.timeout_ns:
-                        finish_time = self.get_runtime_ms()
-                        self.update_time_spent_ms(finish_time)
-                        # print("Stopping benchmark it we are", finish_time, "ms overdue")
                         break
-                    loops_counter += 1
+                if time.time_ns() > self.timeout_ns:  # exit for loop
+                    break
         else:
             print(f'Running TA for {rounds} rounds using a threshold vector size of {len(tau)}...')
             for _ in range(rounds):
                 s_new = self.best_route.copy()
+                improvement = 0
                 for t in tau:
-                    s_new = neighbor_swap(s_new)  # swap neighbors for a new state
-                    s_new_cost = get_total_dist(s_new)  # cost of new route
-                    _cost = s_new_cost - s_old_cost
+                    """Check for improvement before visiting the next threshold"""
+                    improvement += 1
+                    while improvement > 0:
+                        s_new = neighbor_swap(s_new)        # swap neighbors for a new state
+                        s_new_cost = get_total_dist(s_new)  # cost of new route
+                        _cost = s_new_cost - s_old_cost
 
-                    if s_new_cost < s_old_cost:  # if the new route is better than the old route take the new route
-                        s_old = s_new.copy()
-                        s_old_cost = get_total_dist(s_old)
-                        if s_old_cost < s_best_cost:  # update the best route
-                            self.best_route = s_new.copy()  # update best state of the traveling salesman
-                            s_best_cost = get_total_dist(self.best_route)
-                    else:
-                        x = np.random.uniform()
-                        if x < _cost / t:  # threshold vector temperature comparison
+                        """Test the threshold temperature"""
+                        if _cost < t:
+                            # accept the threshold
                             s_old = s_new.copy()
                             s_old_cost = get_total_dist(s_old)
-                        else:
-                            s_new = neighbor_swap(s_new)
-        print("Loops:", loops_counter)
+
+                            """Update best solution"""
+                            if s_old_cost < s_best_cost:  # update the best route
+                                update_counter += 1
+                                self.best_route = s_old.copy()  # update best state of the traveling salesman
+                                s_best_cost = get_total_dist(self.best_route)
+                                improvement += 3  # making improvement with this temperature go for more rounds
+                        improvement -= 1  # decrement improvement
+                        loops_counter += 1
+        print("Loops:", loops_counter, "Updates:", update_counter)
         return self.best_route
 
     def get_runtime_ms(self):
@@ -225,10 +240,12 @@ if __name__ == '__main__':
     # print(_x, _y)
 
     # Simulated annealing threshold accepting variant
-    # sata = SimulatedAnnealingTA(city_list, CoolingSchedule.quad_multiplicative, benchmark_seconds)
-    # new_city_list = sata.simulate(2000, 100, True)  # rounds, threshold length, use benchmark instead of rounds
-    sata = SimulatedAnnealingTA(city_list, CoolingSchedule.exponential, benchmark_seconds)
-    new_city_list = sata.simulate(2000, 55, True)  # rounds, threshold length, use benchmark instead of rounds
+    sata = SimulatedAnnealingTA(city_list, CoolingSchedule.quad_multiplicative, benchmark_seconds)
+    new_city_list = sata.simulate(2000, 100, True)  # rounds, threshold length, use benchmark instead of rounds
+    print("\tBenchmark of", sata.get_bench_time_seconds(), "seconds went over: ", sata.get_time_spent_ms(), "ms")
+    print("Final route cost:", (get_total_dist(new_city_list)))
+    print(f'\t{get_total_dist(city_list)} -> {get_total_dist(new_city_list)}')
+    print("\t\tcost improvement difference", (get_total_dist(city_list) - get_total_dist(new_city_list)))
 
     # fig2 = plt.figure(figsize=(10, 5))
 
@@ -243,34 +260,3 @@ if __name__ == '__main__':
     # plt.plot(_x, _y)
     # plt.show()
     # print(_x, _y)
-    print("\tBenchmark of", sata.get_bench_time_seconds(), "seconds went over: ", sata.get_time_spent_ms(), "ms")
-    print("Final route cost:", (get_total_dist(new_city_list)))
-    print(f'\t{get_total_dist(city_list)} -> {get_total_dist(new_city_list)}')
-    print("\t\tcost improvement difference", (get_total_dist(city_list) - get_total_dist(new_city_list)))
-
-    # # Testing
-    # city = Cities(100)
-    # city_list = city.generate()
-    # for i in range(1, 11):
-    #     start = time.time()
-    #     print("Testing", (100 * i), "rounds with 100 threshold vector length")
-    #     print("\tStarting route cost:", route_cost(city_list))
-    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
-    #     new_city_list = sata.simulate(100 * i, 100)  # rounds, threshold length
-    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
-    #     print("\t\tDIFF Rounds", (route_cost(city_list) - route_cost(new_city_list)))
-    #     start = time.time()
-    #     print("Testing 100 rounds with", (100 * i), "threshold vector length")
-    #     print("\tStarting route cost:", route_cost(city_list))
-    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
-    #     new_city_list = sata.simulate(100, 100 * i)  # rounds, threshold length
-    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
-    #     print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
-    #     start = time.time()
-    #     print("Testing", (100 // 2 * i), "rounds with", (100 // 2 * i), "threshold vector length")
-    #     print("\tStarting route cost:", route_cost(city_list))
-    #     sata = SimulatedAnnealingTA(city_list)  # Simulated annealing threshold accepting variant
-    #     new_city_list = sata.simulate(100 // 2 * i, 100 // 2 * i)  # rounds, threshold length
-    #     print("\tFinal route cost:", (route_cost(new_city_list)), "Time: ", (time.time() - start))
-    #     print("\t\tDIFF Vector", (route_cost(city_list) - route_cost(new_city_list)))
-    #     print("-------------------------------------")
