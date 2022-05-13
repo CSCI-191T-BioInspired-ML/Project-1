@@ -11,6 +11,7 @@ import time
 timeout_seconds = 30
 rng = default_rng(seed=420)
 
+
 class City:
     def __init__(self, _x, _y):
         self.x = _x
@@ -19,7 +20,7 @@ class City:
     # calculate distance between a and b
     @staticmethod
     def single_dist(_a, _b):
-        return numpy.sqrt(numpy.abs(_a.x - _b.x) + numpy.abs(_a.y - _b.y))
+        return numpy.sqrt((_a.x - _b.x) ** 2 + (_a.y - _b.y) ** 2)
 
     # https://stackoverflow.com/questions/509211/understanding-slicing
     @staticmethod
@@ -57,7 +58,7 @@ print("Calculating...")
 timeout = time.time() + timeout_seconds
 restart = 0
 best = cities.copy()
-while(time.time() < timeout):
+while time.time() < timeout:
     # exchange the values and get a new neighbor
     # randomly picks a neighbor, not ideal
     r1, r2 = numpy.random.randint(0, len(cities), size=2)
