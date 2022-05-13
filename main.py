@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt  # plot results
 from numpy.random import default_rng
 
 rng = default_rng(seed=420)
-benchmark_seconds = 60
+benchmark_seconds = 90
 
 
 def random_coordinates():
@@ -83,7 +83,7 @@ class Cities:
 
 
 class CoolingSchedule(Enum):
-    quad_multiplicative = "Quadratic"
+    quad_multiplicative = "Quadratic Multiplicative"
     exponential = "Exponential"
 
 
