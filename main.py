@@ -13,7 +13,7 @@ import time  # for algorithms comparisons
 rng = numpy.random.default_rng(seed=420)
 
 # change for algorithm time comparisons 
-timeout_seconds = 20
+timeout_seconds = 90
 print("Seed: ", rng)
 
 
@@ -25,7 +25,7 @@ class City:
     # calculate distance between a and b
     @staticmethod
     def singleDistance(a, b):
-        return numpy.sqrt(abs(a.x - b.x) ** 2 + (a.y - b.y) ** 2)
+        return numpy.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
 
     # https://stackoverflow.com/questions/509211/understanding-slicing
     @staticmethod
@@ -100,10 +100,10 @@ while time.time() < timeout:  # terminating condition
 # plot results
 print("Final Distance: ", cost0)
 
-for a, b in zip(cities[:-1], cities[1:]):
-   axis2.plot([a.x, b.x], [a.y, b.y], 'b')
-axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
-for curr in cities:
-   axis2.plot(curr.x, curr.y, 'ro')
-
-plt.show()
+# for a, b in zip(cities[:-1], cities[1:]):
+#    axis2.plot([a.x, b.x], [a.y, b.y], 'b')
+# axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
+# for curr in cities:
+#    axis2.plot(curr.x, curr.y, 'ro')
+#
+# plt.show()
