@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt  # plot results
 from numpy.random import default_rng
 
 rng = default_rng(seed=420)
-benchmark_seconds = 20
+benchmark_seconds = 40
 
 
 def random_coordinates():
@@ -240,8 +240,8 @@ if __name__ == '__main__':
     # print(_x, _y)
 
     # Simulated annealing threshold accepting variant
-    sata = SimulatedAnnealingTA(city_list, CoolingSchedule.quad_multiplicative, benchmark_seconds)
-    new_city_list = sata.simulate(2000, 100, True)  # rounds, threshold length, use benchmark instead of rounds
+    sata = SimulatedAnnealingTA(city_list, CoolingSchedule.exponential, benchmark_seconds)
+    new_city_list = sata.simulate(2000, 50, True)  # rounds, threshold length, use benchmark instead of rounds
     print("\tBenchmark of", sata.get_bench_time_seconds(), "seconds went over: ", sata.get_time_spent_ms(), "ms")
     print("Final route cost:", (get_total_dist(new_city_list)))
     print(f'\t{get_total_dist(city_list)} -> {get_total_dist(new_city_list)}')
