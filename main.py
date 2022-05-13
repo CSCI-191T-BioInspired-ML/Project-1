@@ -6,15 +6,16 @@
 
 import numpy
 from numpy.random import default_rng
-import matplotlib.pyplot as plt # plot results
-import time # for algorithms comparisons
+import matplotlib.pyplot as plt  # plot results
+import time  # for algorithms comparisons
 
 # same "randoms" will always be generated because of the seed 
 rng = numpy.random.default_rng(seed=420)
 
 # change for algorithm time comparisons 
-timeout_seconds = 30
+timeout_seconds = 20
 print("Seed: ", rng)
+
 
 class City:
     def __init__(self, x, y):
@@ -24,7 +25,7 @@ class City:
     # calculate distance between a and b
     @staticmethod
     def singleDistance(a, b):
-        return numpy.sqrt(numpy.abs(a.x - b.x) + numpy.abs(a.y - b.y))
+        return numpy.sqrt(abs(a.x - b.x) ** 2 + (a.y - b.y) ** 2)
 
     # https://stackoverflow.com/questions/509211/understanding-slicing
     @staticmethod
@@ -36,38 +37,39 @@ class City:
         dist += City.singleDistance(cities[0], cities[-1])
         return dist
 
+
 if __name__ == '__main__':
     # 100 random city locations
     cities = []
-    for i in range (100):
-       # cities.append(City(numpy.random.uniform(), numpy.random.uniform())) # apparently the depreciated way?
-       cities.append(City(rng.random(), rng.random()))
-    
+    for i in range(100):
+        # cities.append(City(numpy.random.uniform(), numpy.random.uniform())) # apparently the depreciated way?
+        cities.append(City(rng.random(), rng.random()))
+
     # plotting removed for time comparisons
 
-    # fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(10, 5))
     # axis1 = fig.add_subplot(121)
-    # axis2 = fig.add_subplot(121)
+    axis2 = fig.add_subplot(121)
 
     # for a, b in zip(cities[:-1], cities[1:]):
     #    axis1.plot([a.x, b.x], [a.y, b.y], 'b')
     # axis1.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
     # for curr in cities:
     #    axis1.plot(curr.x, curr.y, 'ro')
-    
+
 # Simulated Annealing
 cost0 = City.getTotalDistance(cities)
 print("Starting distance: ", cost0)
 # can change these values
-T = 30  
+T = 30
 factor = 0.99
 T_init = T
 
 print("Calculating...")
 
 # for comparisons, only times after citt locations have been set
-timeout = time.time() + timeout_seconds      # how long the algorithm is allowed to run (30 sec)
-while(time.time() < timeout):                # terminating condition
+timeout = time.time() + timeout_seconds  # how long the algorithm is allowed to run (30 sec)
+while time.time() < timeout:  # terminating condition
 
     # cooling schedule
     T = T * factor
@@ -75,7 +77,7 @@ while(time.time() < timeout):                # terminating condition
         # exchange the values and get a new neighbor
         # randomly picks a neighbor, not ideal
         # want them to be close, use Minimum Spanning Tree?
-        r1, r2 = numpy.random.randint(0, len(cities), size = 2)
+        r1, r2 = numpy.random.randint(0, len(cities), size=2)
 
         # swap
         temp = cities[r1]
@@ -89,7 +91,7 @@ while(time.time() < timeout):                # terminating condition
             cost0 = cost1
         else:
             x = numpy.random.uniform()
-            if x < numpy.exp((cost0 - cost1)/T):
+            if x < numpy.exp((cost0 - cost1) / T):
                 cost0 = cost1
             else:
                 temp = cities[r1]
@@ -98,10 +100,10 @@ while(time.time() < timeout):                # terminating condition
 # plot results
 print("Final Distance: ", cost0)
 
-# for a, b in zip(cities[:-1], cities[1:]):
-#    axis2.plot([a.x, b.x], [a.y, b.y], 'b')
-# axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
-# for curr in cities:
-#    axis2.plot(curr.x, curr.y, 'ro')
+for a, b in zip(cities[:-1], cities[1:]):
+   axis2.plot([a.x, b.x], [a.y, b.y], 'b')
+axis2.plot([cities[0].x, cities[-1].x], [cities[0].y, cities[-1].y], 'b')
+for curr in cities:
+   axis2.plot(curr.x, curr.y, 'ro')
 
-# plt.show()
+plt.show()
