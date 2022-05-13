@@ -35,23 +35,17 @@ def random_coordinates():
     return [rng.random(), rng.random()]
 
 
-def route_cost(route_list):
-    """Calculate route cost from the root of the list to the end of the list"""
-    _distance_sum = 0
-    # sqrt[(x2-x1)^2 + (y2-y1)^2]
-    _length = len(route_list)
-    for coord in range(_length - 1):
-        """Distance between current node and next node"""
-        x1, y1 = route_list[coord]
-        x2, y2 = route_list[coord + 1]
-        _sum = (x2 - x1) ** 2 + (y2 - y1) ** 2
-        _distance_sum += math.sqrt(_sum)
-    """Last node to the root node"""
-    x1, y1 = route_list[0]
-    x2, y2 = route_list[len(route_list) - 1]
-    _sum = (x2 - x1) ** 2 + (y2 - y1) ** 2
-    _distance_sum += math.sqrt(_sum)
-    return _distance_sum
+def single_dist(_a, _b):
+    return math.sqrt((_a[0] - _b[0]) ** 2 + (_a[1] - _b[1]) ** 2)
+
+
+def get_total_dist(_city_list):
+    dist = 0
+    # create tuples, everything except last item and last item
+    for _a, _b in zip(_city_list[:-1], _city_list[1:]):
+        dist += single_dist(_a, _b)
+    dist += single_dist(_city_list[0], _city_list[-1])
+    return dist
 
 
 def neighbor_swap(cities):
@@ -111,34 +105,61 @@ class SimulatedAnnealingTA:
         else:
             tau = self.generate_threshold_vector_quad(steps)
         s_old = self.cities.copy()
-
+        loops_counter = 0
+        s_old_cost = get_total_dist(s_old)
+        s_best_cost = get_total_dist(self.best_route)
         if timeout:
             print("Running TA for", self.get_bench_time_seconds(), "seconds...")
+
             while time.time_ns() < self.timeout_ns:
                 s_new = self.best_route.copy()
                 for t in tau:
                     s_new = neighbor_swap(s_new)  # swap neighbors for a new state
-                    _cost = route_cost(s_new) - route_cost(s_old)
-                    if _cost < t:
+                    s_new_cost = get_total_dist(s_new)  # cost of new route
+                    _cost = s_new_cost - s_old_cost
+
+                    if s_new_cost < s_old_cost:  # if the new route is better than the old route take the new route
                         s_old = s_new.copy()
-                        if route_cost(s_old) < route_cost(self.best_route):
-                            self.best_route = s_new.copy()
+                        s_old_cost = get_total_dist(s_old)
+                        if s_old_cost < s_best_cost:  # update the best route
+                            self.best_route = s_new.copy()  # update best state of the traveling salesman
+                            s_best_cost = get_total_dist(self.best_route)
+                    else:
+                        x = np.random.uniform()
+                        if x < _cost / t:  # threshold vector temperature comparison
+                            s_old = s_new.copy()
+                            s_old_cost = get_total_dist(s_old)
+                        else:
+                            s_new = neighbor_swap(s_new)
                     if time.time_ns() > self.timeout_ns:
                         finish_time = self.get_runtime_ms()
                         self.update_time_spent_ms(finish_time)
                         # print("Stopping benchmark it we are", finish_time, "ms overdue")
                         break
+                    loops_counter += 1
         else:
             print(f'Running TA for {rounds} rounds using a threshold vector size of {len(tau)}...')
             for _ in range(rounds):
                 s_new = self.best_route.copy()
                 for t in tau:
                     s_new = neighbor_swap(s_new)  # swap neighbors for a new state
-                    _cost = route_cost(s_new) - route_cost(s_old)
-                    if _cost < t:
+                    s_new_cost = get_total_dist(s_new)  # cost of new route
+                    _cost = s_new_cost - s_old_cost
+
+                    if s_new_cost < s_old_cost:  # if the new route is better than the old route take the new route
                         s_old = s_new.copy()
-                        if route_cost(s_old) < route_cost(self.best_route):
-                            self.best_route = s_new.copy()
+                        s_old_cost = get_total_dist(s_old)
+                        if s_old_cost < s_best_cost:  # update the best route
+                            self.best_route = s_new.copy()  # update best state of the traveling salesman
+                            s_best_cost = get_total_dist(self.best_route)
+                    else:
+                        x = np.random.uniform()
+                        if x < _cost / t:  # threshold vector temperature comparison
+                            s_old = s_new.copy()
+                            s_old_cost = get_total_dist(s_old)
+                        else:
+                            s_new = neighbor_swap(s_new)
+        print("Loops:", loops_counter)
         return self.best_route
 
     def get_runtime_ms(self):
@@ -187,7 +208,7 @@ if __name__ == '__main__':
     city = Cities(100)
     city_list = city.generate()
     # print("City List:", city_list)
-    print("Starting route cost:", route_cost(city_list))
+    print("Starting route cost:", get_total_dist(city_list))
 
     # plot the cities and paths
     # fig = plt.figure(figsize=(10, 5))
@@ -204,8 +225,10 @@ if __name__ == '__main__':
     # print(_x, _y)
 
     # Simulated annealing threshold accepting variant
-    sata = SimulatedAnnealingTA(city_list, CoolingSchedule.quad_multiplicative, benchmark_seconds)
-    new_city_list = sata.simulate(2000, 400, True)  # rounds, threshold length, use benchmark instead of rounds
+    # sata = SimulatedAnnealingTA(city_list, CoolingSchedule.quad_multiplicative, benchmark_seconds)
+    # new_city_list = sata.simulate(2000, 100, True)  # rounds, threshold length, use benchmark instead of rounds
+    sata = SimulatedAnnealingTA(city_list, CoolingSchedule.exponential, benchmark_seconds)
+    new_city_list = sata.simulate(2000, 55, True)  # rounds, threshold length, use benchmark instead of rounds
 
     # fig2 = plt.figure(figsize=(10, 5))
 
@@ -221,9 +244,9 @@ if __name__ == '__main__':
     # plt.show()
     # print(_x, _y)
     print("\tBenchmark of", sata.get_bench_time_seconds(), "seconds went over: ", sata.get_time_spent_ms(), "ms")
-    print("Final route cost:", (route_cost(new_city_list)))
-    print(f'\t{route_cost(city_list)} -> {route_cost(new_city_list)}')
-    print("\t\tcost improvement difference", (route_cost(city_list) - route_cost(new_city_list)))
+    print("Final route cost:", (get_total_dist(new_city_list)))
+    print(f'\t{get_total_dist(city_list)} -> {get_total_dist(new_city_list)}')
+    print("\t\tcost improvement difference", (get_total_dist(city_list) - get_total_dist(new_city_list)))
 
     # # Testing
     # city = Cities(100)
