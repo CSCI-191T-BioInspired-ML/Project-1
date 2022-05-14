@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt  # plot results
 from numpy.random import default_rng
 
 rng = default_rng(seed=420)
-benchmark_seconds = 40
+benchmark_seconds = 60
 
 
 def random_coordinates():
@@ -114,14 +114,17 @@ class SimulatedAnnealingTA:
             print("Running TA for", self.get_bench_time_seconds(), "seconds...")
             while time.time_ns() < self.timeout_ns:
                 s_new = self.best_route.copy()
-                improvement = 0
                 for t in tau:
                     """Check for improvement before visiting the next threshold"""
-                    improvement += 1
-                    while improvement > 0:
+                    improvement = 0
+                    while improvement > -2:  # evaluate improvement of objective function
                         s_new = neighbor_swap(s_new)  # swap neighbors for a new state
                         s_new_cost = get_total_dist(s_new)  # cost of new route
                         _cost = s_new_cost - s_old_cost
+
+                        """Keep track of the objective function improvement"""
+                        if s_new_cost > s_old_cost:
+                            improvement -= 1  # objective function is not improving at this temperature
 
                         """Test the threshold temperature"""
                         if _cost < t:
@@ -134,14 +137,13 @@ class SimulatedAnnealingTA:
                                 update_counter += 1
                                 self.best_route = s_old.copy()  # update best state of the traveling salesman
                                 s_best_cost = get_total_dist(self.best_route)
-                                improvement += 3  # making improvement with this temperature go for more rounds
 
                         if time.time_ns() > self.timeout_ns:  # exit while loop
                             finish_time = self.get_runtime_ms()
                             self.update_time_spent_ms(finish_time)
                             # print("Stopping benchmark it we are", finish_time, "ms overdue")
                             break
-                        improvement -= 1  # decrement improvement
+
                         loops_counter += 1
                     if time.time_ns() > self.timeout_ns:
                         break
@@ -151,14 +153,17 @@ class SimulatedAnnealingTA:
             print(f'Running TA for {rounds} rounds using a threshold vector size of {len(tau)}...')
             for _ in range(rounds):
                 s_new = self.best_route.copy()
-                improvement = 0
                 for t in tau:
                     """Check for improvement before visiting the next threshold"""
-                    improvement += 1
-                    while improvement > 0:
-                        s_new = neighbor_swap(s_new)        # swap neighbors for a new state
+                    improvement = 0
+                    while improvement > -2:  # evaluate improvement of objective function
+                        s_new = neighbor_swap(s_new)  # swap neighbors for a new state
                         s_new_cost = get_total_dist(s_new)  # cost of new route
                         _cost = s_new_cost - s_old_cost
+
+                        """Keep track of the objective function improvement"""
+                        if s_new_cost > s_old_cost:
+                            improvement -= 1  # objective function is not improving at this temperature
 
                         """Test the threshold temperature"""
                         if _cost < t:
@@ -171,8 +176,7 @@ class SimulatedAnnealingTA:
                                 update_counter += 1
                                 self.best_route = s_old.copy()  # update best state of the traveling salesman
                                 s_best_cost = get_total_dist(self.best_route)
-                                improvement += 3  # making improvement with this temperature go for more rounds
-                        improvement -= 1  # decrement improvement
+
                         loops_counter += 1
         print("Loops:", loops_counter, "Updates:", update_counter)
         return self.best_route
@@ -241,7 +245,7 @@ if __name__ == '__main__':
 
     # Simulated annealing threshold accepting variant
     sata = SimulatedAnnealingTA(city_list, CoolingSchedule.exponential, benchmark_seconds)
-    new_city_list = sata.simulate(2000, 50, True)  # rounds, threshold length, use benchmark instead of rounds
+    new_city_list = sata.simulate(2000, 55, True)  # rounds, threshold length, use benchmark instead of rounds
     print("\tBenchmark of", sata.get_bench_time_seconds(), "seconds went over: ", sata.get_time_spent_ms(), "ms")
     print("Final route cost:", (get_total_dist(new_city_list)))
     print(f'\t{get_total_dist(city_list)} -> {get_total_dist(new_city_list)}')
